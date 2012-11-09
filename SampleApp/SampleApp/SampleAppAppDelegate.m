@@ -11,46 +11,22 @@
 
 @implementation SampleAppAppDelegate
 
-@synthesize sheet = _sheet;
-@synthesize window = _window;
-@synthesize centerFullScreen = _centerFullScreen;
-@synthesize centerTrafficLight = _centerTrafficLight;
-@synthesize fullScreenRightMarginSlider = _fullScreenRightMarginSlider;
-@synthesize trafficLightLeftMargin = _trafficLightLeftMargin;
-@synthesize showsBaselineSeparator = _showsBaselineSeparator;
-@synthesize windowControllers = _windowControllers;
-
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
     self.windowControllers = [NSMutableArray array];
     // The class of the window has been set in INAppStoreWindow in Interface Builder
     self.window.trafficLightButtonsLeftMargin = 7.0;
     self.window.fullScreenButtonRightMargin = 7.0;   
-    self.window.centerFullScreenButton = YES;    
-    self.window.titleBarHeight = 40.0;
+    self.window.centerFullScreenButton = YES;
+    self.window.titleBarHeight = 60.0;
     
     // set checkboxes
     self.centerFullScreen.state = self.window.centerFullScreenButton;
     self.centerTrafficLight.state = self.window.centerTrafficLightButtons;
+    self.verticalTrafficLight.state = self.window.verticalTrafficLightButtons;
     self.showsBaselineSeparator.state = self.window.showsBaselineSeparator;
     self.fullScreenRightMarginSlider.doubleValue = self.window.fullScreenButtonRightMargin;
     self.trafficLightLeftMargin.doubleValue = self.window.trafficLightButtonsLeftMargin;
-}
-
-- (void)windowDidBecomeKey:(NSNotification *)notification{
-    [self.centerFullScreen setEnabled:YES];
-    [self.centerTrafficLight setEnabled:YES];
-    [self.showsBaselineSeparator setEnabled:YES];
-    [self.fullScreenRightMarginSlider setEnabled:YES];
-    [self.trafficLightLeftMargin setEnabled:YES];
-}
-
-- (void)windowDidResignKey:(NSNotification *)notification{
-    [self.centerFullScreen setEnabled:NO];
-    [self.centerTrafficLight setEnabled:NO];
-    [self.showsBaselineSeparator setEnabled:NO];
-    [self.fullScreenRightMarginSlider setEnabled:NO];
-    [self.trafficLightLeftMargin setEnabled:NO];
 }
 
 - (IBAction)showSheetAction:(id)sender
@@ -78,7 +54,9 @@
     if ( [sender isEqual:self.centerFullScreen] ) {
         self.window.centerFullScreenButton = [sender state];
     } else if ( [sender isEqual:self.centerTrafficLight] ) {
-        self.window.centerTrafficLightButtons = [sender state];        
+        self.window.centerTrafficLightButtons = [sender state];
+    } else if ( [sender isEqual:self.verticalTrafficLight] ) {
+        self.window.verticalTrafficLightButtons = [sender state];
     } else {
         self.window.showsBaselineSeparator = [sender state];
     }

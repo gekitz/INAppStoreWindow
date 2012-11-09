@@ -9,21 +9,13 @@
 #import <Cocoa/Cocoa.h>
 #import "INAppStoreWindow.h"
 
-@interface SampleAppAppDelegate : NSObject <NSApplicationDelegate, NSWindowDelegate> {
-    NSPanel *_sheet;
-    INAppStoreWindow *_window;
-    NSButton *_centerFullScreen;
-    NSButton *_centerTrafficLight;
-    NSSlider *_fullScreenRightMarginSlider;
-    NSSlider *_trafficLightLeftMargin;
-    NSButton *_showsBaselineSeparator;
-    NSMutableArray *_windowControllers;    
-}
+@interface SampleAppAppDelegate : NSObject <NSApplicationDelegate>
 
 @property (assign) IBOutlet NSPanel *sheet;
 @property (assign) IBOutlet INAppStoreWindow *window;
 @property (assign) IBOutlet NSButton *centerFullScreen;
 @property (assign) IBOutlet NSButton *centerTrafficLight;
+@property (assign) IBOutlet NSButton *verticalTrafficLight;
 @property (assign) IBOutlet NSSlider *fullScreenRightMarginSlider;
 @property (assign) IBOutlet NSSlider *trafficLightLeftMargin;
 @property (assign) IBOutlet NSButton *showsBaselineSeparator;
