@@ -59,6 +59,13 @@
 @property (nonatomic) CGFloat trafficLightButtonsLeftMargin;
 @property (nonatomic) CGFloat fullScreenButtonRightMargin;
 
+@property (nonatomic) CGFloat trafficLightButtonsTopMargin;
+
+@property (nonatomic, readonly) NSTextField *titleView;
+
+@property (nonatomic, strong) NSString *backButtonTitle;
+
+- (void)setBackButtonTitle:(NSString *)title show:(BOOL)show;
 
 /** So much logic and work has gone into this window subclass to achieve a custom title bar,
  it would be a shame to have to re-invent that just to change the look. So this block can be used

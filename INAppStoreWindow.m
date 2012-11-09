@@ -16,6 +16,8 @@
 //
 
 #import "INAppStoreWindow.h"
+#import "TRBackButton.h"
+#import "NS(Attributed)String+Geometrics.h"
 
 #define IN_RUNNING_LION (floor(NSAppKitVersionNumber) > NSAppKitVersionNumber10_6)
 #define IN_COMPILING_LION __MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
@@ -303,6 +305,8 @@ static inline CGGradientRef createGradientWithColors(NSColor *startingColor, NSC
     BOOL _setFullScreenButtonRightMargin;
     INAppStoreWindowDelegateProxy *_delegateProxy;
     INTitlebarContainer *_titleBarContainer;
+    
+    TRBackButton *_backButton;
 }
 
 @synthesize titleBarView = _titleBarView;
@@ -314,6 +318,9 @@ static inline CGGradientRef createGradientWithColors(NSColor *startingColor, NSC
 @synthesize showsBaselineSeparator = _showsBaselineSeparator;
 @synthesize fullScreenButtonRightMargin = _fullScreenButtonRightMargin;
 @synthesize trafficLightButtonsLeftMargin = _trafficLightButtonsLeftMargin;
+@synthesize trafficLightButtonsTopMargin = _trafficLightButtonsTopMargin;
+
+@synthesize titleView = _titleView;
 
 #pragma mark -
 #pragma mark Initialization
@@ -393,6 +400,15 @@ static inline CGGradientRef createGradientWithColors(NSColor *startingColor, NSC
 #pragma mark -
 #pragma mark Accessors
 
+- (void)setTitle:(NSString *)aString
+{
+    if ([aString length] == 0) {
+        aString = @"no title";
+    }
+    
+    _titleView.stringValue = aString;
+}
+
 - (void)setTitleBarView:(NSView *)newTitleBarView
 {
     if ((_titleBarView != newTitleBarView) && newTitleBarView) {
@@ -452,6 +468,16 @@ static inline CGGradientRef createGradientWithColors(NSColor *startingColor, NSC
 	}
 }
 
+- (void)setTrafficLightButtonsTopMargin:(CGFloat)newTrafficLightButtonsTopMargin
+{
+    if (_trafficLightButtonsTopMargin != newTrafficLightButtonsTopMargin) {
+        _trafficLightButtonsTopMargin = newTrafficLightButtonsTopMargin;
+        [self _layoutTrafficLightsAndContent];
+		[self _displayWindowAndTitlebar];
+        [self _setupTrafficLightsTrackingArea];
+    }
+}
+
 - (CGFloat)trafficLightButtonsLeftMargin
 {
     return _trafficLightButtonsLeftMargin;
@@ -509,6 +535,7 @@ static inline CGGradientRef createGradientWithColors(NSColor *startingColor, NSC
     _centerTrafficLightButtons = YES;
     _titleBarHeight = [self _minimumTitlebarHeight];
 	_trafficLightButtonsLeftMargin = [self _defaultTrafficLightLeftMargin];
+    _trafficLightButtonsTopMargin = 0.0f;
     _delegateProxy = [INAppStoreWindowDelegateProxy alloc];
     
     /** -----------------------------------------
@@ -532,6 +559,9 @@ static inline CGGradientRef createGradientWithColors(NSColor *startingColor, NSC
     [self _createTitlebarView];
     [self _layoutTrafficLightsAndContent];
     [self _setupTrafficLightsTrackingArea];
+    
+    [self _createTitleView];
+    [self _createBackButton];
 }
 
 - (void)_layoutTrafficLightsAndContent
@@ -554,15 +584,30 @@ static inline CGGradientRef createGradientWithColors(NSColor *startingColor, NSC
     } else {
         buttonOrigin = NSMaxY(titleBarFrame) - NSHeight(closeFrame) - INButtonTopOffset;
     }
-    closeFrame.origin.y = buttonOrigin;
-    minimizeFrame.origin.y = buttonOrigin;
-    zoomFrame.origin.y = buttonOrigin;
+    closeFrame.origin.y = buttonOrigin - _trafficLightButtonsTopMargin;
+    minimizeFrame.origin.y = buttonOrigin - _trafficLightButtonsTopMargin;
+    zoomFrame.origin.y = buttonOrigin - _trafficLightButtonsTopMargin;
 	closeFrame.origin.x = _trafficLightButtonsLeftMargin;
     minimizeFrame.origin.x = _trafficLightButtonsLeftMargin + [self _trafficLightSeparation];
     zoomFrame.origin.x = _trafficLightButtonsLeftMargin + [self _trafficLightSeparation] * 2;
     [close setFrame:closeFrame];
     [minimize setFrame:minimizeFrame];
     [zoom setFrame:zoomFrame];
+    
+    //set frame of the title view
+    NSRect titleRect = [_titleView frame];
+    titleRect.origin.y = NSHeight(titleBarFrame) - NSHeight(titleRect) - _trafficLightButtonsTopMargin - 2;
+    [_titleView setFrame:titleRect];
+    
+    //set frame for backButton
+    CGFloat txtWidth = [_backButton.attributedTitle sizeForWidth:1024 height:22].width + 5;
+    CGFloat totalPossibleWidth = NSWidth(titleBarFrame) - self.contentMinSize.width + 55;
+    CGFloat effectiveWidth = txtWidth + 10 > totalPossibleWidth ? totalPossibleWidth : (txtWidth < 55 ? 55 : txtWidth);
+    
+    NSRect backFrame = [_backButton frame];
+    backFrame.origin.y = NSHeight(titleBarFrame) - NSHeight(titleRect) - _trafficLightButtonsTopMargin;
+    backFrame.size.width = effectiveWidth;
+    [_backButton setFrame:backFrame];
     
     #if IN_COMPILING_LION
     // Set the frame of the FullScreen button in Lion if available
@@ -626,6 +671,34 @@ static inline CGGradientRef createGradientWithColors(NSColor *startingColor, NSC
     _titleBarContainer = [container autorelease];
     self.titleBarView = [[[INTitlebarView alloc] initWithFrame:NSZeroRect] autorelease];
     #endif
+}
+
+- (void)_createTitleView
+{
+    _titleView = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 52, NSWidth(self.frame), 22)];
+    _titleView.stringValue = @"My Tasks";
+    _titleView.font = [NSFont systemFontOfSize:13];
+    [_titleView setTextColor:[NSColor colorWithCalibratedRed:0.369 green:0.369 blue:0.369 alpha:1]];
+    [_titleView setBackgroundColor:[NSColor clearColor]];
+    [_titleView setEnabled:NO];
+    [_titleView setBezeled:NO];
+    [_titleView setEditable:NO];
+    [_titleView setAlignment:NSCenterTextAlignment];
+    [_titleView setAutoresizingMask:NSViewWidthSizable];
+    [self.titleBarView addSubview:_titleView];
+}
+
+- (void)_createBackButton
+{
+    _backButton = [[TRBackButton alloc] initWithFrame:NSMakeRect(70, 52, 55, 22)];
+    [_backButton setHidden:YES];
+    [self.titleBarView addSubview:_backButton];
+}
+
+- (void)setBackButtonTitle:(NSString *)title show:(BOOL)show
+{
+    [_backButton setBackTitle:title];
+    [_backButton setHidden:!show];
 }
 
 - (void)_hideTitleBarView:(BOOL)hidden 
